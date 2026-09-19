@@ -1,0 +1,27 @@
+name: Gerar ZIP Jukebox Web
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'web/**'
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Gerar ZIP
+        run: |
+          cd web
+          zip -r ../Jukebox_Web_v129ef.zip .
+      - name: Publicar ZIP
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: web-v129ef
+          name: Jukebox Web v129ef
+          files: Jukebox_Web_v129ef.zip
+          make_latest: true
