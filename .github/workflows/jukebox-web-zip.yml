@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - 'web/**'
+      - '.github/workflows/jukebox-web-zip.yml'
 
 permissions:
   contents: write
@@ -25,3 +26,4 @@ jobs:
           name: Jukebox Web v129ef
           files: Jukebox_Web_v129ef.zip
           make_latest: true
+          overwrite_files: true
