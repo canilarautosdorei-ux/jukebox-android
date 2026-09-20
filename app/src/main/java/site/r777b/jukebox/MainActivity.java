@@ -15,7 +15,7 @@ import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Looper;\nimport android.content.ComponentName;
+import android.os.Looper;
 import android.view.View;
 import android.view.Window;
 import android.webkit.CookieManager;
@@ -77,7 +77,8 @@ public class MainActivity extends Activity {
         enterImmersiveMode();
         setContentView(R.layout.activity_main);
 
-        prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);\n        startPlaybackKeepAliveService();
+        prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        startPlaybackKeepAliveService();
         webView = findViewById(R.id.webView);
 
         WebView.setWebContentsDebuggingEnabled(false);
@@ -188,7 +189,19 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void startPlaybackKeepAliveService() {\n        Intent serviceIntent = new Intent(this, JukeboxPlaybackService.class);\n        try {\n            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n                startForegroundService(serviceIntent);\n            } else {\n                startService(serviceIntent);\n            }\n        } catch (Exception ignored) {\n        }\n    }\n\n    private boolean handleNavigation(Uri uri) {
+    private void startPlaybackKeepAliveService() {
+        Intent serviceIntent = new Intent(this, JukeboxPlaybackService.class);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(serviceIntent);
+            } else {
+                startService(serviceIntent);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private boolean handleNavigation(Uri uri) {
         if (uri == null) return false;
 
         if ("jukebox".equalsIgnoreCase(uri.getScheme()) && "retry".equalsIgnoreCase(uri.getHost())) {
@@ -296,7 +309,8 @@ public class MainActivity extends Activity {
         long last = prefs.getLong(KEY_LAST_ACTIVE, 0L);
 
         if (webView != null) {
-            webView.onResume();\n            webView.resumeTimers();
+            webView.onResume();
+            webView.resumeTimers();
 
             if (showingErrorPage) {
                 retryHandler.postDelayed(retryRunnable, 500L);
@@ -312,7 +326,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         retryHandler.removeCallbacks(retryRunnable);
         prefs.edit().putLong(KEY_LAST_ACTIVE, System.currentTimeMillis()).apply();
-        if (webView != null) webView.onPause();
+        // Mantém o WebView ativo no segundo plano para preservar a reprodução.
         super.onPause();
     }
 
