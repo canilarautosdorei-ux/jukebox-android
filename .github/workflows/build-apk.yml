@@ -46,8 +46,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: desktop/package-lock.json
       - run: npm install
       - run: npm run dist:linux
       - uses: actions/upload-artifact@v4
@@ -68,8 +66,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
-          cache-dependency-path: desktop/package-lock.json
       - run: npm install
       - run: npm run dist:win
       - uses: actions/upload-artifact@v4
