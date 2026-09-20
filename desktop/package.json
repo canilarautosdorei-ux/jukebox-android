@@ -1,48 +1,33 @@
 {
   "name": "jukebox-desktop",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "Aplicativo desktop da Jukebox",
+  "description": "Jukebox desktop launcher",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win portable --x64",
-    "dist:linux": "electron-builder --linux AppImage --x64"
+    "dist:linux": "electron-builder --linux AppImage deb",
+    "dist:win": "electron-builder --win nsis portable"
   },
   "devDependencies": {
-    "electron": "37.2.6",
-    "electron-builder": "26.0.12"
+    "electron": "^38.1.2",
+    "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "site.r777b.jukebox.desktop",
+    "appId": "site.r777b.jukebox",
     "productName": "Jukebox",
     "asar": true,
-    "files": [
-      "main.js",
-      "error.html",
-      "package.json"
-    ],
-    "directories": {
-      "output": "dist"
+    "files": ["main.js", "package.json"],
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "AudioVideo"
     },
     "win": {
-      "target": [
-        {
-          "target": "portable",
-          "arch": ["x64"]
-        }
-      ],
-      "artifactName": "Jukebox-Windows-${version}.exe"
+      "target": ["nsis", "portable"]
     },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": ["x64"]
-        }
-      ],
-      "category": "AudioVideo",
-      "artifactName": "Jukebox-Linux-${version}.AppImage"
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false
     }
   }
 }
