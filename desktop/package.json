@@ -17,17 +17,32 @@
     "appId": "site.r777b.jukebox",
     "productName": "Jukebox",
     "asar": true,
-    "files": ["main.js", "package.json"],
+    "files": [
+      "main.js",
+      "package.json"
+    ],
     "linux": {
-      "target": ["AppImage", "deb"],
-      "category": "AudioVideo"
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "AudioVideo",
+      "maintainer": "Canil Arautos do Rei <canilarautosdorei@gmail.com>"
     },
     "win": {
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false
     }
+  },
+  "homepage": "https://teste.r777b.site/jukebox",
+  "author": {
+    "name": "Canil Arautos do Rei",
+    "email": "canilarautosdorei@gmail.com"
   }
 }
