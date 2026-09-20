@@ -1,1 +1,89 @@
-package site.r777b.jukebox;\n\nimport android.app.Notification;\nimport android.app.NotificationChannel;\nimport android.app.NotificationManager;\nimport android.app.PendingIntent;\nimport android.app.Service;\nimport android.content.Intent;\nimport android.media.session.MediaSession;\nimport android.os.Build;\nimport android.os.IBinder;\n\npublic class JukeboxPlaybackService extends Service {\n    private static final String CHANNEL_ID = "jukebox_playback";\n    private static final int NOTIFICATION_ID = 1001;\n    private MediaSession mediaSession;\n\n    @Override\n    public void onCreate() {\n        super.onCreate();\n        createNotificationChannel();\n        mediaSession = new MediaSession(this, "JukeboxPlayback");\n        mediaSession.setActive(true);\n        startForeground(NOTIFICATION_ID, buildNotification());\n    }\n\n    @Override\n    public int onStartCommand(Intent intent, int flags, int startId) {\n        startForeground(NOTIFICATION_ID, buildNotification());\n        return START_STICKY;\n    }\n\n    private Notification buildNotification() {\n        Intent openIntent = new Intent(this, MainActivity.class);\n        openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);\n\n        int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {\n            pendingFlags |= PendingIntent.FLAG_IMMUTABLE;\n        }\n        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, openIntent, pendingFlags);\n\n        Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O\n                ? new Notification.Builder(this, CHANNEL_ID)\n                : new Notification.Builder(this);\n\n        builder.setSmallIcon(android.R.drawable.ic_media_play)\n                .setContentTitle("Jukebox")\n                .setContentText("Reprodução em segundo plano ativa")\n                .setContentIntent(contentIntent)\n                .setOngoing(true)\n                .setCategory(Notification.CATEGORY_TRANSPORT)\n                .setVisibility(Notification.VISIBILITY_PUBLIC);\n\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && mediaSession != null) {\n            builder.setStyle(new Notification.MediaStyle().setMediaSession(mediaSession.getSessionToken()));\n        }\n\n        return builder.build();\n    }\n\n    private void createNotificationChannel() {\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {\n            NotificationChannel channel = new NotificationChannel(\n                    CHANNEL_ID,\n                    "Reprodução da Jukebox",\n                    NotificationManager.IMPORTANCE_LOW\n            );\n            channel.setDescription("Mantém a reprodução da Jukebox ativa em segundo plano.");\n            NotificationManager manager = getSystemService(NotificationManager.class);\n            if (manager != null) manager.createNotificationChannel(channel);\n        }\n    }\n\n    @Override\n    public IBinder onBind(Intent intent) {\n        return null;\n    }\n\n    @Override\n    public void onDestroy() {\n        if (mediaSession != null) {\n            mediaSession.setActive(false);\n            mediaSession.release();\n            mediaSession = null;\n        }\n        super.onDestroy();\n    }\n}\n
+package site.r777b.jukebox;
+
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.media.session.MediaSession;
+import android.os.Build;
+import android.os.IBinder;
+
+public class JukeboxPlaybackService extends Service {
+    private static final String CHANNEL_ID = "jukebox_playback";
+    private static final int NOTIFICATION_ID = 1001;
+    private MediaSession mediaSession;
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        createNotificationChannel();
+        mediaSession = new MediaSession(this, "JukeboxPlayback");
+        mediaSession.setActive(true);
+        startForeground(NOTIFICATION_ID, buildNotification());
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        startForeground(NOTIFICATION_ID, buildNotification());
+        return START_STICKY;
+    }
+
+    private Notification buildNotification() {
+        Intent openIntent = new Intent(this, MainActivity.class);
+        openIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        int pendingFlags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            pendingFlags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, openIntent, pendingFlags);
+
+        Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+                ? new Notification.Builder(this, CHANNEL_ID)
+                : new Notification.Builder(this);
+
+        builder.setSmallIcon(android.R.drawable.ic_media_play)
+                .setContentTitle("Jukebox")
+                .setContentText("Reprodução em segundo plano ativa")
+                .setContentIntent(contentIntent)
+                .setOngoing(true)
+                .setCategory(Notification.CATEGORY_TRANSPORT)
+                .setVisibility(Notification.VISIBILITY_PUBLIC);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && mediaSession != null) {
+            builder.setStyle(new Notification.MediaStyle().setMediaSession(mediaSession.getSessionToken()));
+        }
+
+        return builder.build();
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID,
+                    "Reprodução da Jukebox",
+                    NotificationManager.IMPORTANCE_LOW
+            );
+            channel.setDescription("Mantém a reprodução da Jukebox ativa em segundo plano.");
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) manager.createNotificationChannel(channel);
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mediaSession != null) {
+            mediaSession.setActive(false);
+            mediaSession.release();
+            mediaSession = null;
+        }
+        super.onDestroy();
+    }
+}
