@@ -2,6 +2,7 @@ package site.r777b.jukebox;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Rational;
 import android.view.View;
 import android.view.Window;
 import android.webkit.CookieManager;
@@ -99,7 +101,7 @@ public class MainActivity extends Activity {
         s.setDisplayZoomControls(false);
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        s.setUserAgentString(s.getUserAgentString() + " JukeboxAndroid/1.1");
+        s.setUserAgentString(s.getUserAgentString() + " JukeboxAndroid/1.3");
 
         webView.setWebViewClient(new WebViewClient() {
             @Override
@@ -320,6 +322,25 @@ public class MainActivity extends Activity {
         }
 
         prefs.edit().putLong(KEY_LAST_ACTIVE, now).apply();
+    }
+
+    @Override
+    public void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        enterPictureInPictureIfPossible();
+    }
+
+    private void enterPictureInPictureIfPossible() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        if (isFinishing() || showingErrorPage || isInPictureInPictureMode()) return;
+
+        try {
+            PictureInPictureParams params = new PictureInPictureParams.Builder()
+                    .setAspectRatio(new Rational(16, 9))
+                    .build();
+            enterPictureInPictureMode(params);
+        } catch (Exception ignored) {
+        }
     }
 
     @Override
