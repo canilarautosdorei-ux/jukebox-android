@@ -2,6 +2,19 @@ const { app, BrowserWindow, shell, session } = require('electron');
 
 const START_URL = 'https://teste.r777b.site/jukebox';
 
+async function clearStartupCache() {
+  const ses = session.defaultSession;
+  try {
+    await ses.clearCache();
+  } catch (_) {}
+
+  try {
+    await ses.clearStorageData({
+      storages: ['serviceworkers', 'cachestorage']
+    });
+  } catch (_) {}
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -35,7 +48,7 @@ function createWindow() {
     } catch (_) {}
   });
 
-  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.4' });
+  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.5' });
 
   win.webContents.on('did-fail-load', (_e, _code, _desc, url, isMainFrame) => {
     if (isMainFrame) {
@@ -49,10 +62,13 @@ function createWindow() {
 }
 
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
     callback(['media', 'fullscreen', 'notifications'].includes(permission));
   });
+
+  // Limpa o cache antes de abrir o site, preservando cookies e localStorage.
+  await clearStartupCache();
   createWindow();
 });
 
