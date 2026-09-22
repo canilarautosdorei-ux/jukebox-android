@@ -35,7 +35,7 @@ function createWindow() {
     } catch (_) {}
   });
 
-  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.2' });
+  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.4' });
 
   win.webContents.on('did-fail-load', (_e, _code, _desc, url, isMainFrame) => {
     if (isMainFrame) {
