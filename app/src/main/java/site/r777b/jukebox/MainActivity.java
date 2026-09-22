@@ -165,22 +165,26 @@ public class MainActivity extends Activity {
         webView = findViewById(R.id.webView);
         configureWebView(webView);
 
-        boolean forceReload = prefs.getBoolean(KEY_FORCE_RELOAD, false);
-        if (forceReload) {
+        // Sempre inicia com cache limpo para buscar a versão mais recente do site.
+        // Cookies, localStorage e demais dados de sessão são preservados.
+        clearWebViewCacheBeforeInitialLoad();
+
+        if (prefs.getBoolean(KEY_FORCE_RELOAD, false)) {
             prefs.edit().remove(KEY_FORCE_RELOAD).apply();
         }
 
-        if (savedInstanceState == null || forceReload) {
-            webView.loadUrl(lastGoodUrl);
-        } else {
-            try {
-                if (webView.restoreState(savedInstanceState) == null) {
-                    webView.loadUrl(lastGoodUrl);
-                }
-            } catch (Throwable t) {
-                recordDiagnostic("restore_state_failed: " + t.getClass().getSimpleName());
-                webView.loadUrl(lastGoodUrl);
-            }
+        webView.loadUrl(lastGoodUrl);
+    }
+
+    private void clearWebViewCacheBeforeInitialLoad() {
+        if (webView == null) return;
+        try {
+            webView.stopLoading();
+            webView.clearCache(true);
+            webView.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+            recordDiagnostic("startup_cache_cleared");
+        } catch (Throwable t) {
+            recordDiagnostic("startup_cache_clear_failed: " + t.getClass().getSimpleName());
         }
     }
 
@@ -205,7 +209,7 @@ public class MainActivity extends Activity {
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setOffscreenPreRaster(false);
-        s.setUserAgentString(s.getUserAgentString() + " JukeboxAndroid/1.4");
+        s.setUserAgentString(s.getUserAgentString() + " JukeboxAndroid/1.5");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             view.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
