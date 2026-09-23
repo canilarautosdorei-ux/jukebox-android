@@ -8,6 +8,9 @@ app.commandLine.appendSwitch('enable-webgl');
 app.commandLine.appendSwitch('enable-gpu-rasterization');
 app.commandLine.appendSwitch('enable-zero-copy');
 app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+// Força WebGL2 por software em computadores sem GPU ou com driver incompatível.
+app.commandLine.appendSwitch('use-gl', 'angle');
+app.commandLine.appendSwitch('use-angle', 'swiftshader');
 
 async function clearStartupCache() {
   const ses = session.defaultSession;
