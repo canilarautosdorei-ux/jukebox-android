@@ -2,6 +2,13 @@ const { app, BrowserWindow, shell, session } = require('electron');
 
 const START_URL = 'https://lan1.r777b.site/';
 
+// Mantém WebGL2 ativo em GPUs compatíveis e libera o SwiftShader como plano B.
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-webgl');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+
 async function clearStartupCache() {
   const ses = session.defaultSession;
   try {
@@ -48,7 +55,7 @@ function createWindow() {
     } catch (_) {}
   });
 
-  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.5' });
+  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.5.1' });
 
   win.webContents.on('did-fail-load', (_e, _code, _desc, url, isMainFrame) => {
     if (isMainFrame) {
