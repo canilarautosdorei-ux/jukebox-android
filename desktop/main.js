@@ -55,7 +55,8 @@ function createWindow() {
     } catch (_) {}
   });
 
-  win.loadURL(START_URL, { userAgent: 'JukeboxDesktop/1.5.1' });
+  // Usa a identificação completa do Chromium para não ser bloqueado por jogos WebGL.
+  win.loadURL(START_URL);
 
   win.webContents.on('did-fail-load', (_e, _code, _desc, url, isMainFrame) => {
     if (isMainFrame) {
