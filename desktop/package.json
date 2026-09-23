@@ -1,8 +1,8 @@
 {
   "name": "jukebox-desktop",
-  "version": "1.5.3",
+  "version": "1.6.0",
   "private": true,
-  "description": "Jukebox desktop launcher",
+  "description": "Lançador da Jukebox com Firefox ou Chrome",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
