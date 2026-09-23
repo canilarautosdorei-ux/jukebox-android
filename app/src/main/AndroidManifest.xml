@@ -8,7 +8,7 @@
     <application
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
-        android:label="Jukebox"
+        android:label="LAN_HOUSE"
         android:theme="@style/Theme.Jukebox">
 
         <service
