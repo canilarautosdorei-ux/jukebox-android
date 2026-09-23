@@ -1,6 +1,6 @@
 {
   "name": "jukebox-desktop",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "private": true,
   "description": "Jukebox desktop launcher",
   "main": "main.js",
@@ -40,7 +40,7 @@
       "perMachine": false
     }
   },
-  "homepage": "https://teste.r777b.site/jukebox",
+  "homepage": "https://lan1.r777b.site/",
   "author": {
     "name": "Canil Arautos do Rei",
     "email": "canilarautosdorei@gmail.com"
