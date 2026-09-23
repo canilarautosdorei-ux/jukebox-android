@@ -1,6 +1,6 @@
 {
   "name": "jukebox-desktop",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
   "description": "Jukebox desktop launcher",
   "main": "main.js",
