@@ -1,88 +1,197 @@
-const { app, BrowserWindow, shell, session } = require('electron');
+const { app, dialog } = require('electron');
+const { spawn, execFileSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 const START_URL = 'https://lan1.r777b.site/';
+const CONFIG_FILE = 'browser-choice.json';
 
-// Mantém WebGL2 ativo em GPUs compatíveis e libera o SwiftShader como plano B.
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-webgl');
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('enable-unsafe-swiftshader');
-// Força WebGL2 por software em computadores sem GPU ou com driver incompatível.
-app.commandLine.appendSwitch('use-gl', 'angle');
-app.commandLine.appendSwitch('use-angle', 'swiftshader');
+function configPath() {
+  return path.join(app.getPath('userData'), CONFIG_FILE);
+}
 
-async function clearStartupCache() {
-  const ses = session.defaultSession;
+function readChoice() {
   try {
-    await ses.clearCache();
-  } catch (_) {}
+    const saved = JSON.parse(fs.readFileSync(configPath(), 'utf8'));
+    return saved.browser === 'firefox' || saved.browser === 'chrome'
+      ? saved.browser
+      : null;
+  } catch (_) {
+    return null;
+  }
+}
 
+function saveChoice(browser) {
+  fs.mkdirSync(app.getPath('userData'), { recursive: true });
+  fs.writeFileSync(configPath(), JSON.stringify({ browser }, null, 2));
+}
+
+function clearChoice() {
   try {
-    await ses.clearStorageData({
-      storages: ['serviceworkers', 'cachestorage']
-    });
+    fs.unlinkSync(configPath());
   } catch (_) {}
 }
 
-function createWindow() {
-  const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
-    fullscreen: true,
-    autoHideMenuBar: true,
-    backgroundColor: '#07090d',
-    webPreferences: {
-      contextIsolation: true,
-      sandbox: true,
-      autoplayPolicy: 'no-user-gesture-required'
-    }
-  });
+function firstExisting(candidates) {
+  return candidates.find(candidate => candidate && fs.existsSync(candidate)) || null;
+}
 
-  win.removeMenu();
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://lan1.r777b.site/')) return { action: 'allow' };
-    shell.openExternal(url);
-    return { action: 'deny' };
-  });
-
-  win.webContents.on('will-navigate', (event, url) => {
+function commandPath(commands) {
+  for (const command of commands) {
     try {
-      const u = new URL(url);
-      if (u.hostname !== 'lan1.r777b.site' && !u.hostname.endsWith('.lan1.r777b.site')) {
-        event.preventDefault();
-        shell.openExternal(url);
-      }
+      const found = execFileSync('which', [command], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+      }).trim();
+      if (found) return found;
     } catch (_) {}
-  });
-
-  // Usa a identificação completa do Chromium para não ser bloqueado por jogos WebGL.
-  win.loadURL(START_URL);
-
-  win.webContents.on('did-fail-load', (_e, _code, _desc, url, isMainFrame) => {
-    if (isMainFrame) {
-      setTimeout(() => {
-        if (!win.isDestroyed()) win.loadURL(START_URL);
-      }, 4000);
-    }
-  });
-
-  win.on('closed', () => {});
+  }
+  return null;
 }
 
-app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-app.whenReady().then(async () => {
-  session.defaultSession.setPermissionRequestHandler((_wc, permission, callback) => {
-    callback(['media', 'fullscreen', 'notifications'].includes(permission));
+function findFirefox() {
+  if (process.platform === 'win32') {
+    return firstExisting([
+      path.join(process.env.PROGRAMFILES || '', 'Mozilla Firefox', 'firefox.exe'),
+      path.join(process.env['PROGRAMFILES(X86)'] || '', 'Mozilla Firefox', 'firefox.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Mozilla Firefox', 'firefox.exe')
+    ]);
+  }
+
+  return commandPath(['firefox', 'firefox-esr']);
+}
+
+function findChrome() {
+  if (process.platform === 'win32') {
+    return firstExisting([
+      path.join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(process.env['PROGRAMFILES(X86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(process.env.PROGRAMFILES || '', 'Chromium', 'Application', 'chrome.exe'),
+      path.join(process.env.LOCALAPPDATA || '', 'Chromium', 'Application', 'chrome.exe')
+    ]);
+  }
+
+  return commandPath([
+    'google-chrome',
+    'google-chrome-stable',
+    'chromium',
+    'chromium-browser'
+  ]);
+}
+
+async function askBrowser() {
+  const result = await dialog.showMessageBox({
+    type: 'question',
+    title: 'Jukebox',
+    message: 'Qual navegador deseja usar na Jukebox?',
+    detail: 'A escolha ficará salva. Nas próximas vezes a Jukebox abrirá diretamente.',
+    buttons: ['Firefox', 'Chrome', 'Cancelar'],
+    defaultId: 0,
+    cancelId: 2,
+    noLink: true
   });
 
-  // Limpa o cache antes de abrir o site, preservando cookies e localStorage.
-  await clearStartupCache();
-  createWindow();
-});
+  if (result.response === 0) return 'firefox';
+  if (result.response === 1) return 'chrome';
+  return null;
+}
 
-app.on('window-all-closed', () => {
-  app.quit();
-});
+async function showMissingBrowser(browser) {
+  const name = browser === 'firefox' ? 'Firefox' : 'Chrome';
+  const result = await dialog.showMessageBox({
+    type: 'error',
+    title: 'Navegador não encontrado',
+    message: `${name} não está instalado neste computador.`,
+    detail: 'Instale o navegador ou escolha a outra opção.',
+    buttons: ['Escolher novamente', 'Fechar'],
+    defaultId: 0,
+    cancelId: 1,
+    noLink: true
+  });
+
+  return result.response === 0;
+}
+
+function launchFirefox(executable) {
+  const profile = path.join(app.getPath('userData'), 'firefox-profile');
+  fs.mkdirSync(profile, { recursive: true });
+
+  return spawn(executable, [
+    '-no-remote',
+    '-profile',
+    profile,
+    '--kiosk',
+    START_URL
+  ], {
+    detached: true,
+    stdio: 'ignore'
+  });
+}
+
+function launchChrome(executable) {
+  const profile = path.join(app.getPath('userData'), 'chrome-profile');
+  fs.mkdirSync(profile, { recursive: true });
+
+  return spawn(executable, [
+    `--user-data-dir=${profile}`,
+    '--kiosk',
+    '--no-first-run',
+    '--disable-session-crashed-bubble',
+    '--disable-infobars',
+    '--autoplay-policy=no-user-gesture-required',
+    START_URL
+  ], {
+    detached: true,
+    stdio: 'ignore'
+  });
+}
+
+async function runLauncher() {
+  let choice = process.argv.includes('--escolher-navegador') ? null : readChoice();
+
+  while (true) {
+    if (!choice) choice = await askBrowser();
+    if (!choice) {
+      app.quit();
+      return;
+    }
+
+    const executable = choice === 'firefox' ? findFirefox() : findChrome();
+    if (!executable) {
+      clearChoice();
+      const retry = await showMissingBrowser(choice);
+      if (!retry) {
+        app.quit();
+        return;
+      }
+      choice = null;
+      continue;
+    }
+
+    saveChoice(choice);
+
+    try {
+      const child = choice === 'firefox'
+        ? launchFirefox(executable)
+        : launchChrome(executable);
+      child.unref();
+      setTimeout(() => app.quit(), 800);
+      return;
+    } catch (error) {
+      clearChoice();
+      await dialog.showMessageBox({
+        type: 'error',
+        title: 'Não foi possível abrir a Jukebox',
+        message: 'O navegador não pôde ser iniciado.',
+        detail: error && error.message ? error.message : String(error),
+        buttons: ['Fechar']
+      });
+      app.quit();
+      return;
+    }
+  }
+}
+
+app.whenReady().then(runLauncher);
+app.on('window-all-closed', () => app.quit());
