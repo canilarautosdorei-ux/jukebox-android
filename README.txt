@@ -1,5 +1,5 @@
 JUKEBOX ANDROID WEBVIEW
-URL: https://teste.r777b.site/jukebox
+URL: https://lan1.r777b.site/
 
 Comportamento:
 - O APK carrega a Jukebox diretamente do servidor.
