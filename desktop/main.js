@@ -6,6 +6,8 @@ const path = require('path');
 const START_URL = 'https://lan1.r777b.site/';
 const CONFIG_FILE = 'browser-choice.json';
 
+app.setName('LAN_HOUSE');
+
 function configPath() {
   return path.join(app.getPath('userData'), CONFIG_FILE);
 }
@@ -83,9 +85,9 @@ function findChrome() {
 async function askBrowser() {
   const result = await dialog.showMessageBox({
     type: 'question',
-    title: 'Jukebox',
-    message: 'Qual navegador deseja usar na Jukebox?',
-    detail: 'A escolha ficará salva. Nas próximas vezes a Jukebox abrirá diretamente.',
+    title: 'LAN_HOUSE',
+    message: 'Qual navegador deseja usar na LAN_HOUSE?',
+    detail: 'A escolha ficará salva. Nas próximas vezes a LAN_HOUSE abrirá diretamente.',
     buttons: ['Firefox', 'Chrome', 'Cancelar'],
     defaultId: 0,
     cancelId: 2,
@@ -182,7 +184,7 @@ async function runLauncher() {
       clearChoice();
       await dialog.showMessageBox({
         type: 'error',
-        title: 'Não foi possível abrir a Jukebox',
+        title: 'Não foi possível abrir a LAN_HOUSE',
         message: 'O navegador não pôde ser iniciado.',
         detail: error && error.message ? error.message : String(error),
         buttons: ['Fechar']
