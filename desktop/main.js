@@ -1,6 +1,6 @@
 const { app, BrowserWindow, shell, session } = require('electron');
 
-const START_URL = 'https://teste.r777b.site/jukebox';
+const START_URL = 'https://lan1.r777b.site/';
 
 async function clearStartupCache() {
   const ses = session.defaultSession;
@@ -33,7 +33,7 @@ function createWindow() {
 
   win.removeMenu();
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (url.startsWith('https://teste.r777b.site/')) return { action: 'allow' };
+    if (url.startsWith('https://lan1.r777b.site/')) return { action: 'allow' };
     shell.openExternal(url);
     return { action: 'deny' };
   });
@@ -41,7 +41,7 @@ function createWindow() {
   win.webContents.on('will-navigate', (event, url) => {
     try {
       const u = new URL(url);
-      if (u.hostname !== 'teste.r777b.site' && !u.hostname.endsWith('.teste.r777b.site')) {
+      if (u.hostname !== 'lan1.r777b.site' && !u.hostname.endsWith('.lan1.r777b.site')) {
         event.preventDefault();
         shell.openExternal(url);
       }
