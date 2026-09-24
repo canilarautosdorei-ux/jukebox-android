@@ -45,7 +45,7 @@ public class JukeboxPlaybackService extends Service {
                 : new Notification.Builder(this);
 
         builder.setSmallIcon(android.R.drawable.ic_media_play)
-                .setContentTitle("Jukebox")
+                .setContentTitle("Jukebox Admin")
                 .setContentText("Reprodução em segundo plano ativa")
                 .setContentIntent(contentIntent)
                 .setOngoing(true)
@@ -63,10 +63,10 @@ public class JukeboxPlaybackService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Reprodução da Jukebox",
+                    "Jukebox Admin",
                     NotificationManager.IMPORTANCE_LOW
             );
-            channel.setDescription("Mantém a reprodução da Jukebox ativa em segundo plano.");
+            channel.setDescription("Mantém o Jukebox Admin ativo em segundo plano.");
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);
         }
