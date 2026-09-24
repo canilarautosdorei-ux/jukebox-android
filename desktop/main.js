@@ -3,10 +3,10 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const START_URL = 'https://kiosk.r777b.site/admin';
+const START_URL = 'https://kiosk.r777b.site';
 const CONFIG_FILE = 'browser-choice.json';
 
-app.setName('Jukebox Admin');
+app.setName('kiosk');
 
 function configPath() {
   return path.join(app.getPath('userData'), CONFIG_FILE);
@@ -85,9 +85,9 @@ function findChrome() {
 async function askBrowser() {
   const result = await dialog.showMessageBox({
     type: 'question',
-    title: 'Jukebox Admin',
-    message: 'Qual navegador deseja usar na Jukebox Admin?',
-    detail: 'A escolha ficará salva. Nas próximas vezes a Jukebox Admin abrirá diretamente.',
+    title: 'kiosk',
+    message: 'Qual navegador deseja usar na kiosk?',
+    detail: 'A escolha ficará salva. Nas próximas vezes a kiosk abrirá diretamente.',
     buttons: ['Firefox', 'Chrome', 'Cancelar'],
     defaultId: 0,
     cancelId: 2,
@@ -184,7 +184,7 @@ async function runLauncher() {
       clearChoice();
       await dialog.showMessageBox({
         type: 'error',
-        title: 'Não foi possível abrir a Jukebox Admin',
+        title: 'Não foi possível abrir a kiosk',
         message: 'O navegador não pôde ser iniciado.',
         detail: error && error.message ? error.message : String(error),
         buttons: ['Fechar']
