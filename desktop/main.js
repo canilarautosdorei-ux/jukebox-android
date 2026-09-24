@@ -3,10 +3,10 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const START_URL = 'https://lan1.r777b.site/';
+const START_URL = 'https://teste.r777b.site/jukebox/admin';
 const CONFIG_FILE = 'browser-choice.json';
 
-app.setName('LAN_HOUSE');
+app.setName('Jukebox Admin');
 
 function configPath() {
   return path.join(app.getPath('userData'), CONFIG_FILE);
@@ -85,9 +85,9 @@ function findChrome() {
 async function askBrowser() {
   const result = await dialog.showMessageBox({
     type: 'question',
-    title: 'LAN_HOUSE',
-    message: 'Qual navegador deseja usar na LAN_HOUSE?',
-    detail: 'A escolha ficará salva. Nas próximas vezes a LAN_HOUSE abrirá diretamente.',
+    title: 'Jukebox Admin',
+    message: 'Qual navegador deseja usar na Jukebox Admin?',
+    detail: 'A escolha ficará salva. Nas próximas vezes a Jukebox Admin abrirá diretamente.',
     buttons: ['Firefox', 'Chrome', 'Cancelar'],
     defaultId: 0,
     cancelId: 2,
@@ -184,7 +184,7 @@ async function runLauncher() {
       clearChoice();
       await dialog.showMessageBox({
         type: 'error',
-        title: 'Não foi possível abrir a LAN_HOUSE',
+        title: 'Não foi possível abrir a Jukebox Admin',
         message: 'O navegador não pôde ser iniciado.',
         detail: error && error.message ? error.message : String(error),
         buttons: ['Fechar']
