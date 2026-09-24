@@ -1,8 +1,8 @@
 {
-  "name": "jukebox-desktop",
-  "version": "1.6.1",
+  "name": "jukebox-admin-desktop",
+  "version": "1.5.0",
   "private": true,
-  "description": "Lançador LAN_HOUSE com Firefox ou Chrome",
+  "description": "Jukebox Admin para Windows e Linux",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -14,8 +14,8 @@
     "electron-builder": "^26.0.12"
   },
   "build": {
-    "appId": "site.r777b.jukebox",
-    "productName": "LAN_HOUSE",
+    "appId": "site.r777b.jukebox.admin.desktop",
+    "productName": "Jukebox Admin",
     "asar": true,
     "files": [
       "main.js",
@@ -40,7 +40,7 @@
       "perMachine": false
     }
   },
-  "homepage": "https://lan1.r777b.site/",
+  "homepage": "https://teste.r777b.site/jukebox/admin",
   "author": {
     "name": "Canil Arautos do Rei",
     "email": "canilarautosdorei@gmail.com"
