@@ -1,4 +1,4 @@
-name: Build Jukebox Admin APK
+name: Build Jukebox Admin
 
 on:
   push:
@@ -36,4 +36,40 @@ jobs:
         with:
           name: Jukebox-Admin-1.5.0
           path: output/Jukebox-Admin-1.5.0.apk
+          retention-days: 30
+
+  linux:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run dist:linux
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jukebox-Admin-Linux-1.5.0
+          path: desktop/dist/*.AppImage
+          retention-days: 30
+
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npm run dist:win
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Jukebox-Admin-Windows-1.5.0
+          path: desktop/dist/*.exe
           retention-days: 30
