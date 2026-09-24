@@ -3,7 +3,7 @@ const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const START_URL = 'https://teste.r777b.site/jukebox/admin';
+const START_URL = 'https://kiosk.r777b.site/admin';
 const CONFIG_FILE = 'browser-choice.json';
 
 app.setName('Jukebox Admin');
