@@ -44,8 +44,8 @@ import java.util.Locale;
 
 public class MainActivity extends Activity {
     private static final String TAG = "JukeboxWebView";
-    private static final String START_URL = "https://lan1.r777b.site/";
-    private static final String START_HOST = "lan1.r777b.site";
+    private static final String START_URL = "https://teste.r777b.site/jukebox/admin";
+    private static final String START_HOST = "teste.r777b.site";
     private static final long REFRESH_AFTER_MS = 24L * 60L * 60L * 1000L;
     private static final long RETRY_DELAY_MS = 4000L;
     private static final long PAGE_LOAD_TIMEOUT_MS = 40000L;
@@ -209,7 +209,7 @@ public class MainActivity extends Activity {
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setOffscreenPreRaster(false);
-        s.setUserAgentString(s.getUserAgentString() + " JukeboxAndroid/1.5");
+        s.setUserAgentString(s.getUserAgentString() + " JukeboxAdminAndroid/1.5");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             view.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
