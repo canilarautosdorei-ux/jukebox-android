@@ -1,8 +1,8 @@
-name: Build Jukebox Android Windows Linux
+name: Build Jukebox Admin APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ jukebox-admin-1.5.0 ]
   workflow_dispatch:
 
 permissions:
@@ -31,48 +31,9 @@ jobs:
       - name: Prepare APK
         run: |
           mkdir -p output
-          cp app/build/outputs/apk/debug/app-debug.apk output/Jukebox-Android.apk
+          cp app/build/outputs/apk/debug/app-debug.apk output/Jukebox-Admin-1.5.0.apk
       - uses: actions/upload-artifact@v4
         with:
-          name: Jukebox-Android
-          path: output/Jukebox-Android.apk
-          retention-days: 30
-
-  linux:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: desktop
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install
-      - run: npm run dist:linux
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Jukebox-Linux
-          path: |
-            desktop/dist/*.AppImage
-            desktop/dist/*.deb
-          retention-days: 30
-
-  windows:
-    runs-on: windows-latest
-    defaults:
-      run:
-        working-directory: desktop
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install
-      - run: npm run dist:win
-      - uses: actions/upload-artifact@v4
-        with:
-          name: Jukebox-Windows
-          path: |
-            desktop/dist/*.exe
+          name: Jukebox-Admin-1.5.0
+          path: output/Jukebox-Admin-1.5.0.apk
           retention-days: 30
