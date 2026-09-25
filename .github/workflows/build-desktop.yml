@@ -1,4 +1,4 @@
-name: Gerar kiosk WebView Linux
+name: Publicar kiosk WebView Linux 1.5.0
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   linux:
@@ -18,14 +18,22 @@ jobs:
     defaults:
       run:
         working-directory: desktop
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install
-      - run: npm run dist:linux
-      - uses: actions/upload-artifact@v4
+
+      - name: Instalar dependências
+        run: npm install
+
+      - name: Gerar AppImage e DEB
+        run: npm run dist:linux
+
+      - name: Publicar artefatos do workflow
+        uses: actions/upload-artifact@v4
         with:
           name: kiosk-WebView-Linux-1.5.0
           path: |
@@ -33,3 +41,17 @@ jobs:
             desktop/dist/*.deb
           if-no-files-found: error
           retention-days: 30
+
+      - name: Criar ou atualizar Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: kiosk-webview-linux-1.5.0
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.AppImage dist/*.deb --clobber
+          else
+            gh release create "$TAG" dist/*.AppImage dist/*.deb \
+              --title "kiosk WebView Linux 1.5.0" \
+              --notes "Versão Linux com WebView embutido, tela cheia/kiosk, abrindo https://kiosk.r777b.site" \
+              --target "$GITHUB_SHA"
+          fi
