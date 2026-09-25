@@ -1,199 +1,64 @@
-const { app, dialog } = require('electron');
-const { spawn, execFileSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { app, BrowserWindow, shell } = require('electron');
 
 const START_URL = 'https://kiosk.r777b.site';
-const CONFIG_FILE = 'browser-choice.json';
 
-app.setName('kiosk');
+let mainWindow;
 
-function configPath() {
-  return path.join(app.getPath('userData'), CONFIG_FILE);
-}
-
-function readChoice() {
-  try {
-    const saved = JSON.parse(fs.readFileSync(configPath(), 'utf8'));
-    return saved.browser === 'firefox' || saved.browser === 'chrome'
-      ? saved.browser
-      : null;
-  } catch (_) {
-    return null;
-  }
-}
-
-function saveChoice(browser) {
-  fs.mkdirSync(app.getPath('userData'), { recursive: true });
-  fs.writeFileSync(configPath(), JSON.stringify({ browser }, null, 2));
-}
-
-function clearChoice() {
-  try {
-    fs.unlinkSync(configPath());
-  } catch (_) {}
-}
-
-function firstExisting(candidates) {
-  return candidates.find(candidate => candidate && fs.existsSync(candidate)) || null;
-}
-
-function commandPath(commands) {
-  for (const command of commands) {
-    try {
-      const found = execFileSync('which', [command], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore']
-      }).trim();
-      if (found) return found;
-    } catch (_) {}
-  }
-  return null;
-}
-
-function findFirefox() {
-  if (process.platform === 'win32') {
-    return firstExisting([
-      path.join(process.env.PROGRAMFILES || '', 'Mozilla Firefox', 'firefox.exe'),
-      path.join(process.env['PROGRAMFILES(X86)'] || '', 'Mozilla Firefox', 'firefox.exe'),
-      path.join(process.env.LOCALAPPDATA || '', 'Mozilla Firefox', 'firefox.exe')
-    ]);
-  }
-
-  return commandPath(['firefox', 'firefox-esr']);
-}
-
-function findChrome() {
-  if (process.platform === 'win32') {
-    return firstExisting([
-      path.join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-      path.join(process.env['PROGRAMFILES(X86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-      path.join(process.env.LOCALAPPDATA || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-      path.join(process.env.PROGRAMFILES || '', 'Chromium', 'Application', 'chrome.exe'),
-      path.join(process.env.LOCALAPPDATA || '', 'Chromium', 'Application', 'chrome.exe')
-    ]);
-  }
-
-  return commandPath([
-    'google-chrome',
-    'google-chrome-stable',
-    'chromium',
-    'chromium-browser'
-  ]);
-}
-
-async function askBrowser() {
-  const result = await dialog.showMessageBox({
-    type: 'question',
-    title: 'kiosk',
-    message: 'Qual navegador deseja usar na kiosk?',
-    detail: 'A escolha ficará salva. Nas próximas vezes a kiosk abrirá diretamente.',
-    buttons: ['Firefox', 'Chrome', 'Cancelar'],
-    defaultId: 0,
-    cancelId: 2,
-    noLink: true
-  });
-
-  if (result.response === 0) return 'firefox';
-  if (result.response === 1) return 'chrome';
-  return null;
-}
-
-async function showMissingBrowser(browser) {
-  const name = browser === 'firefox' ? 'Firefox' : 'Chrome';
-  const result = await dialog.showMessageBox({
-    type: 'error',
-    title: 'Navegador não encontrado',
-    message: `${name} não está instalado neste computador.`,
-    detail: 'Instale o navegador ou escolha a outra opção.',
-    buttons: ['Escolher novamente', 'Fechar'],
-    defaultId: 0,
-    cancelId: 1,
-    noLink: true
-  });
-
-  return result.response === 0;
-}
-
-function launchFirefox(executable) {
-  const profile = path.join(app.getPath('userData'), 'firefox-profile');
-  fs.mkdirSync(profile, { recursive: true });
-
-  return spawn(executable, [
-    '-no-remote',
-    '-profile',
-    profile,
-    '--kiosk',
-    START_URL
-  ], {
-    detached: true,
-    stdio: 'ignore'
-  });
-}
-
-function launchChrome(executable) {
-  const profile = path.join(app.getPath('userData'), 'chrome-profile');
-  fs.mkdirSync(profile, { recursive: true });
-
-  return spawn(executable, [
-    `--user-data-dir=${profile}`,
-    '--kiosk',
-    '--no-first-run',
-    '--disable-session-crashed-bubble',
-    '--disable-infobars',
-    '--autoplay-policy=no-user-gesture-required',
-    START_URL
-  ], {
-    detached: true,
-    stdio: 'ignore'
-  });
-}
-
-async function runLauncher() {
-  let choice = process.argv.includes('--escolher-navegador') ? null : readChoice();
-
-  while (true) {
-    if (!choice) choice = await askBrowser();
-    if (!choice) {
-      app.quit();
-      return;
+function createWindow() {
+  mainWindow = new BrowserWindow({
+    fullscreen: true,
+    kiosk: true,
+    autoHideMenuBar: true,
+    frame: false,
+    backgroundColor: '#000000',
+    webPreferences: {
+      javascript: true,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true
     }
+  });
 
-    const executable = choice === 'firefox' ? findFirefox() : findChrome();
-    if (!executable) {
-      clearChoice();
-      const retry = await showMissingBrowser(choice);
-      if (!retry) {
-        app.quit();
-        return;
+  mainWindow.setMenuBarVisibility(false);
+  mainWindow.loadURL(START_URL);
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const target = new URL(url);
+      const allowed = target.hostname === 'kiosk.r777b.site' || target.hostname.endsWith('.kiosk.r777b.site');
+      if (allowed) {
+        mainWindow.loadURL(url);
+      } else {
+        shell.openExternal(url);
       }
-      choice = null;
-      continue;
-    }
+    } catch (_) {}
+    return { action: 'deny' };
+  });
 
-    saveChoice(choice);
-
+  mainWindow.webContents.on('will-navigate', (event, url) => {
     try {
-      const child = choice === 'firefox'
-        ? launchFirefox(executable)
-        : launchChrome(executable);
-      child.unref();
-      setTimeout(() => app.quit(), 800);
-      return;
-    } catch (error) {
-      clearChoice();
-      await dialog.showMessageBox({
-        type: 'error',
-        title: 'Não foi possível abrir a kiosk',
-        message: 'O navegador não pôde ser iniciado.',
-        detail: error && error.message ? error.message : String(error),
-        buttons: ['Fechar']
-      });
-      app.quit();
-      return;
-    }
-  }
+      const target = new URL(url);
+      const allowed = target.hostname === 'kiosk.r777b.site' || target.hostname.endsWith('.kiosk.r777b.site');
+      if (!allowed) {
+        event.preventDefault();
+        shell.openExternal(url);
+      }
+    } catch (_) {}
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
 }
 
-app.whenReady().then(runLauncher);
-app.on('window-all-closed', () => app.quit());
+app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
+app.whenReady().then(() => {
+  app.setName('kiosk WebView');
+  createWindow();
+});
+
+app.on('window-all-closed', () => {
+  app.quit();
+});
