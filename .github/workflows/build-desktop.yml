@@ -3,7 +3,7 @@ name: Publicar kiosk WebView Linux 1.5.1
 on:
   push:
     branches:
-      - kiosk-webview-1.5.1
+      - kiosk-webview-1.5.0
     paths:
       - 'desktop/**'
       - '.github/workflows/build-desktop.yml'
