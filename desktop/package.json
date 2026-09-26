@@ -1,8 +1,8 @@
 {
   "name": "kiosk-webview-linux",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
-  "description": "kiosk Linux com WebView embutido e recuperação WebGL",
+  "description": "kiosk Linux com WebView embutido, recuperação WebGL e sessão limpa a cada abertura",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
