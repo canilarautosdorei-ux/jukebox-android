@@ -1,18 +1,52 @@
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, shell, session } = require('electron');
 
 const START_URL = 'https://kiosk.r777b.site';
 
 let mainWindow = null;
 let gpuRestarting = false;
 
-// Mantem WebGL/3D ativo mesmo se o processo GPU falhar algumas vezes.
-// O Chromium normalmente pode bloquear APIs 3D por dominio ate reiniciar o app.
 app.disableDomainBlockingFor3DAPIs();
 
 app.commandLine.appendSwitch('enable-gpu');
 app.commandLine.appendSwitch('enable-webgl');
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
+
+async function clearAllBrowserData() {
+  const ses = session.defaultSession;
+
+  try {
+    await ses.clearCache();
+  } catch (e) {
+    console.error('[KIOSK] Erro ao limpar cache:', e);
+  }
+
+  try {
+    await ses.clearAuthCache();
+  } catch (e) {
+    console.error('[KIOSK] Erro ao limpar auth cache:', e);
+  }
+
+  try {
+    await ses.clearStorageData({
+      storages: [
+        'cookies',
+        'localstorage',
+        'indexdb',
+        'serviceworkers',
+        'cachestorage',
+        'websql',
+        'shadercache'
+      ]
+    });
+  } catch (e) {
+    console.error('[KIOSK] Erro ao limpar storage:', e);
+  }
+
+  try {
+    await ses.cookies.flushStore();
+  } catch (_) {}
+}
 
 function createWindow() {
   if (mainWindow && !mainWindow.isDestroyed()) {
@@ -83,7 +117,6 @@ app.on('child-process-gone', (_event, details) => {
 
   console.error('[KIOSK] Processo GPU caiu:', details);
 
-  // Reiniciar o Electron limpa o estado quebrado do processo GPU/WebGL.
   if (!gpuRestarting) {
     gpuRestarting = true;
     app.relaunch();
@@ -93,6 +126,9 @@ app.on('child-process-gone', (_event, details) => {
 
 app.whenReady().then(async () => {
   app.setName('kiosk WebView');
+
+  // Sempre inicia zerado.
+  await clearAllBrowserData();
 
   try {
     const status = app.getGPUFeatureStatus();
