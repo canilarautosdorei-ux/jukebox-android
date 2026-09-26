@@ -1,4 +1,4 @@
-name: Publicar kiosk WebView Linux 1.5.2
+name: Publicar kiosk WebView Linux 1.5.1
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
       - name: Publicar artefatos do workflow
         uses: actions/upload-artifact@v4
         with:
-          name: kiosk-WebView-Linux-1.5.2
+          name: kiosk-WebView-Linux-1.5.1
           path: |
             desktop/dist/*.AppImage
             desktop/dist/*.deb
@@ -45,13 +45,13 @@ jobs:
       - name: Criar ou atualizar Release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: kiosk-webview-linux-1.5.2
+          TAG: kiosk-webview-linux-1.5.1
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/*.AppImage dist/*.deb --clobber
           else
             gh release create "$TAG" dist/*.AppImage dist/*.deb \
-              --title "kiosk WebView Linux 1.5.2" \
+              --title "kiosk WebView Linux 1.5.1" \
               --notes "Versão Linux com WebView embutido, tela cheia/kiosk, abrindo https://kiosk.r777b.site" \
               --target "$GITHUB_SHA"
           fi
