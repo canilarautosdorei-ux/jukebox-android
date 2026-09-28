@@ -1,0 +1,59 @@
+name: Exportar fontes Jukebox e Kiosk
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/export-source-zips.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Jukebox
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: jukebox-src
+
+      - name: Checkout Kiosk
+        uses: actions/checkout@v4
+        with:
+          ref: kiosk-webview-1.5.0
+          path: kiosk-src
+
+      - name: Limpar metadados Git
+        run: |
+          rm -rf jukebox-src/.git
+          rm -rf kiosk-src/.git
+
+      - name: Gerar ZIP Jukebox
+        run: |
+          cd jukebox-src
+          zip -r ../Jukebox-Codigo-Fonte-1.6.3.zip . -x "*/node_modules/*" "*/dist/*" "*/build/*" ".gradle/*"
+
+      - name: Gerar ZIP Kiosk
+        run: |
+          cd kiosk-src
+          zip -r ../Kiosk-WebView-Codigo-Fonte-1.5.5.zip . -x "*/node_modules/*" "*/dist/*" "*/build/*" ".gradle/*"
+
+      - name: Publicar fonte Jukebox
+        uses: actions/upload-artifact@v4
+        with:
+          name: Jukebox-Codigo-Fonte-1.6.3
+          path: Jukebox-Codigo-Fonte-1.6.3.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publicar fonte Kiosk
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kiosk-WebView-Codigo-Fonte-1.5.5
+          path: Kiosk-WebView-Codigo-Fonte-1.5.5.zip
+          if-no-files-found: error
+          retention-days: 30
