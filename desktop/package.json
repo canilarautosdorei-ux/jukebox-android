@@ -1,8 +1,8 @@
 {
   "name": "kiosk-webview-linux",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "private": true,
-  "description": "kiosk Linux com WebView embutido, recuperação WebGL, localStorage persistente e Alt+F4 bloqueado",
+  "description": "kiosk Linux com WebView embutido, recuperação WebGL, localStorage persistente, Alt+F4 bloqueado e Ctrl+.+F para sair",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
