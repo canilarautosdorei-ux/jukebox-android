@@ -4,6 +4,7 @@ const START_URL = 'https://kiosk.r777b.site';
 
 let mainWindow = null;
 let gpuRestarting = false;
+let allowClose = false;
 
 // Mantem WebGL/3D ativo mesmo se o processo GPU falhar algumas vezes.
 // O Chromium normalmente pode bloquear APIs 3D por dominio ate reiniciar o app.
@@ -37,6 +38,24 @@ function createWindow() {
   });
 
   mainWindow.setMenuBarVisibility(false);
+
+  // Bloqueia Alt+F4 e outras tentativas normais de fechar a janela.
+  mainWindow.on('close', (event) => {
+    if (!allowClose) {
+      event.preventDefault();
+    }
+  });
+
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    const isAltF4 =
+      input.type === 'keyDown' &&
+      input.alt === true &&
+      String(input.key || '').toLowerCase() === 'f4';
+
+    if (isAltF4) {
+      event.preventDefault();
+    }
+  });
 
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
     console.error('[KIOSK] Renderer encerrado:', details);
@@ -86,6 +105,7 @@ app.on('child-process-gone', (_event, details) => {
   // Reiniciar o Electron limpa o estado quebrado do processo GPU/WebGL.
   if (!gpuRestarting) {
     gpuRestarting = true;
+    allowClose = true;
     app.relaunch();
     app.exit(0);
   }
