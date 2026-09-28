@@ -46,14 +46,41 @@ function createWindow() {
     }
   });
 
+  let closeSequence = [];
+
   mainWindow.webContents.on('before-input-event', (event, input) => {
+    const key = String(input.key || '').toLowerCase();
+
     const isAltF4 =
       input.type === 'keyDown' &&
       input.alt === true &&
-      String(input.key || '').toLowerCase() === 'f4';
+      key === 'f4';
 
     if (isAltF4) {
       event.preventDefault();
+      return;
+    }
+
+    if (input.type !== 'keyDown') return;
+
+    // Atalho autorizado para fechar: Ctrl + . + F
+    if (input.control === true && key === '.') {
+      closeSequence = ['ctrl-dot'];
+      event.preventDefault();
+      return;
+    }
+
+    if (closeSequence.length && key === 'f') {
+      closeSequence = [];
+      allowClose = true;
+      app.quit();
+      event.preventDefault();
+      return;
+    }
+
+    // Qualquer outra tecla cancela a sequencia.
+    if (key !== 'control') {
+      closeSequence = [];
     }
   });
 
