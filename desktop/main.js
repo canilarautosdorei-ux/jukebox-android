@@ -1,12 +1,15 @@
-const { app, dialog } = require('electron');
+const { app, dialog, globalShortcut } = require('electron');
 const { spawn, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-const START_URL = 'https://lan1.r777b.site/';
+const START_URL = 'https://jk.r777b.site/jukebox';
 const CONFIG_FILE = 'browser-choice.json';
 
-app.setName('LAN_HOUSE');
+app.setName('Jukebox');
+
+let browserProcess = null;
+let exitShortcutTimer = null;
 
 function configPath() {
   return path.join(app.getPath('userData'), CONFIG_FILE);
@@ -85,9 +88,9 @@ function findChrome() {
 async function askBrowser() {
   const result = await dialog.showMessageBox({
     type: 'question',
-    title: 'LAN_HOUSE',
-    message: 'Qual navegador deseja usar na LAN_HOUSE?',
-    detail: 'A escolha ficará salva. Nas próximas vezes a LAN_HOUSE abrirá diretamente.',
+    title: 'Jukebox',
+    message: 'Qual navegador deseja usar na Jukebox?',
+    detail: 'A escolha ficará salva. Nas próximas vezes a Jukebox abrirá diretamente.',
     buttons: ['Firefox', 'Chrome', 'Cancelar'],
     defaultId: 0,
     cancelId: 2,
@@ -121,12 +124,11 @@ function launchFirefox(executable) {
 
   return spawn(executable, [
     '-no-remote',
-    '-profile',
-    profile,
+    '-profile', profile,
     '--kiosk',
     START_URL
   ], {
-    detached: true,
+    detached: process.platform !== 'win32',
     stdio: 'ignore'
   });
 }
@@ -144,17 +146,74 @@ function launchChrome(executable) {
     '--autoplay-policy=no-user-gesture-required',
     START_URL
   ], {
-    detached: true,
+    detached: process.platform !== 'win32',
     stdio: 'ignore'
   });
 }
 
+function stopBrowser() {
+  if (!browserProcess || !browserProcess.pid) return;
+
+  try {
+    if (process.platform === 'win32') {
+      spawn('taskkill', ['/PID', String(browserProcess.pid), '/T', '/F'], {
+        detached: true,
+        stdio: 'ignore'
+      }).unref();
+    } else {
+      try {
+        process.kill(-browserProcess.pid, 'SIGTERM');
+      } catch (_) {
+        browserProcess.kill('SIGTERM');
+      }
+    }
+  } catch (_) {}
+}
+
+function quitJukebox() {
+  if (exitShortcutTimer) {
+    clearTimeout(exitShortcutTimer);
+    exitShortcutTimer = null;
+  }
+
+  try { globalShortcut.unregister('F'); } catch (_) {}
+  stopBrowser();
+
+  setTimeout(() => {
+    globalShortcut.unregisterAll();
+    app.quit();
+  }, 350);
+}
+
+function registerKioskShortcuts() {
+  // Impede Alt+F4 de chegar ao Firefox/Chrome enquanto o launcher estiver ativo.
+  globalShortcut.register('Alt+F4', () => {});
+
+  // Sequência de saída: Ctrl + . e, em seguida, F.
+  globalShortcut.register('CommandOrControl+.', () => {
+    try { globalShortcut.unregister('F'); } catch (_) {}
+
+    globalShortcut.register('F', () => {
+      quitJukebox();
+    });
+
+    if (exitShortcutTimer) clearTimeout(exitShortcutTimer);
+    exitShortcutTimer = setTimeout(() => {
+      try { globalShortcut.unregister('F'); } catch (_) {}
+      exitShortcutTimer = null;
+    }, 2500);
+  });
+}
+
 async function runLauncher() {
+  registerKioskShortcuts();
+
   let choice = process.argv.includes('--escolher-navegador') ? null : readChoice();
 
   while (true) {
     if (!choice) choice = await askBrowser();
     if (!choice) {
+      globalShortcut.unregisterAll();
       app.quit();
       return;
     }
@@ -164,6 +223,7 @@ async function runLauncher() {
       clearChoice();
       const retry = await showMissingBrowser(choice);
       if (!retry) {
+        globalShortcut.unregisterAll();
         app.quit();
         return;
       }
@@ -174,21 +234,23 @@ async function runLauncher() {
     saveChoice(choice);
 
     try {
-      const child = choice === 'firefox'
+      browserProcess = choice === 'firefox'
         ? launchFirefox(executable)
         : launchChrome(executable);
-      child.unref();
-      setTimeout(() => app.quit(), 800);
+
+      // Mantém o launcher residente para bloquear Alt+F4 e ouvir Ctrl+.+F.
+      browserProcess.on('error', () => {});
       return;
     } catch (error) {
       clearChoice();
       await dialog.showMessageBox({
         type: 'error',
-        title: 'Não foi possível abrir a LAN_HOUSE',
+        title: 'Não foi possível abrir a Jukebox',
         message: 'O navegador não pôde ser iniciado.',
         detail: error && error.message ? error.message : String(error),
         buttons: ['Fechar']
       });
+      globalShortcut.unregisterAll();
       app.quit();
       return;
     }
@@ -196,4 +258,11 @@ async function runLauncher() {
 }
 
 app.whenReady().then(runLauncher);
-app.on('window-all-closed', () => app.quit());
+
+app.on('will-quit', () => {
+  globalShortcut.unregisterAll();
+});
+
+app.on('window-all-closed', () => {
+  // O launcher precisa continuar ativo em segundo plano.
+});
